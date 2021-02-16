@@ -2,6 +2,8 @@ const express = require('express');
 const redis = require('redis');
 const bodyParser = require('body-parser');
 const app = express();
+const httpServer = app.listen(3000);
+const io = require('socket.io')(httpServer);
 const redisClient = redis.createClient();
 
 // npm init => Neues Node.js-Projekt initialisieren
@@ -35,8 +37,22 @@ app.post('/chats/:id', (req, res) => {
             res.status(500).send('Error');
         } else {
             res.send('OK');
+            if (subscriptions[req.params.id] != null) {
+                subscriptions[req.params.id].forEach(client => client.emit('refresh', {id: req.params.id}));
+            }
         }
     });
 });
 
-app.listen(3000); // => http://localhost:3000
+const subscriptions = {};
+
+io.on('connection', client => {
+    client.on('join', data => {
+        if (subscriptions[data.id] == null) {
+            subscriptions[data.id] = [];
+        }
+        subscriptions[data.id].push(client);
+    });
+});
+
+// app.listen(3000); // => http://localhost:3000

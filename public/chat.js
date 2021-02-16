@@ -32,3 +32,15 @@ document.querySelector('#chat-form').addEventListener('submit', event => {
     event.preventDefault();
     createChatMessage();
 });
+
+window.addEventListener('load', () => {
+    const socket = io();
+    socket.on('connect', () => {
+        console.log('CONNECTION ESTABLISHED');
+        socket.emit('join', {id: '123'});
+    });
+    socket.on('refresh', data => {
+        console.log('REFRESH', data);
+        fetchChatMessages();
+    });
+});
